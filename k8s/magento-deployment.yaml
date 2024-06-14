@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Kompose\kompose.exe convert
+    kompose.version: 1.33.0 (3ce457399)
+  labels:
+    io.kompose.service: magento
+  name: magento
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: magento
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Kompose\kompose.exe convert
+        kompose.version: 1.33.0 (3ce457399)
+      labels:
+        io.kompose.network/6-compose-flexdb-magento-network: "true"
+        io.kompose.service: magento
+    spec:
+      containers:
+      - image: poojaagarwal26/magento_pfs_install2:latest
+        name: magento-runner
+        ports:
+        - containerPort: 8080
+          hostPort: 8080
+          protocol: TCP
+        env:
+        - name: MAGENTO_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: magento-config
+              key: MAGENTO_BASE_URL
+        - name: NGINX_SERVER_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: magento-config
+              key: NGINX_SERVER_NAME
+        - name: DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: magento-config
+              key: FLEX_SERVER_NAME
+        - name: DATABASE_USER
+          valueFrom:
+            configMapKeyRef:
+              name: magento-config
+              key: FLEX_SERVER_USER
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: magento-config
+              key: FLEX_SERVER_PASSWORD
+        volumeMounts:
+        - mountPath: /var/www/html/magento2/pub/media
+          name: magento-media
+      volumes:
+      - name: magento-media
+        persistentVolumeClaim:
+          claimName: magento-pvc
+      restartPolicy: Always
